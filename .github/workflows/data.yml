@@ -1,0 +1,49 @@
+name: Sběr dat VD Orlík
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sber-dat
+  cancel-in-progress: false
+
+jobs:
+  sber:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Stáhnout a zpracovat data z PVL
+        env:
+          VD_ORLIK_HISTORY: docs/vd_orlik_history.json
+          VD_ORLIK_OUT: docs/orlik.json
+        run: python3 tools/vd_orlik_parser.py
+
+      - name: Ověřit výsledek
+        run: |
+          python3 - <<'PY'
+          import json, sys
+          d = json.load(open("docs/orlik.json", encoding="utf-8"))
+          if not d.get("ok"):
+              print("parser vrátil chybu:", d.get("chyba"))
+              sys.exit(1)
+          h = d.get("hladina")
+          if not isinstance(h, (int, float)) or not (320 <= h <= 365):
+              print("nedůvěryhodná hladina:", h)
+              sys.exit(1)
+          print("OK  hladina", h, " měřeno", d.get("cas_mereni"))
+          PY
+
+      - name: Uložit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/orlik.json docs/vd_orlik_history.json
+          git diff --staged --quiet && echo "beze změny" && exit 0
+          git commit -m "data: $(python3 -c "import json;print(json.load(open('docs/orlik.json'))['cas_mereni'])")"
+          git push
