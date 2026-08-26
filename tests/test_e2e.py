@@ -269,3 +269,42 @@ async def test_jen_jeden_pozadavek_na_muj_server(hass: HomeAssistant, zdroj) -> 
     adresy = {str(v[1]) for v in zdroj.mock_calls}
     assert adresy == {DEFAULT_URL}, adresy
     assert len(zdroj.mock_calls) == 1, f"{len(zdroj.mock_calls)} požadavků místo jednoho"
+
+
+# ---------------------------------------------------------------- ikony
+
+
+def _dostupne_ikony() -> set[str]:
+    """Jména ikon, která opravdu existují v dodávaném Material Design Icons."""
+    import glob
+    import json as _json
+
+    try:
+        import hass_frontend
+    except ImportError:  # pragma: no cover - jinde než v plné instalaci HA
+        return set()
+    zaklad = Path(hass_frontend.__file__).parent / "static" / "mdi"
+    jmena: set[str] = set()
+    for soubor in glob.glob(str(zaklad / "*.json")):
+        with open(soubor, encoding="utf-8") as f:
+            data = _json.load(f)
+        if isinstance(data, dict):
+            jmena |= set(data)
+    return jmena
+
+
+def test_vsechny_ikony_existuji() -> None:
+    """Neexistující mdi: jméno se nikde nehlásí — ikona prostě zmizí."""
+    import re
+
+    ikony = _dostupne_ikony()
+    if not ikony:
+        pytest.skip("hass_frontend není nainstalované")
+
+    spatne: dict[str, list[str]] = {}
+    for cesta in (KOREN / "custom_components" / "vd_orlik").glob("*.py"):
+        text = cesta.read_text(encoding="utf-8")
+        chybne = sorted({i for i in re.findall(r"mdi:([a-z0-9-]+)", text) if i not in ikony})
+        if chybne:
+            spatne[cesta.name] = chybne
+    assert not spatne, f"neexistující ikony: {spatne}"
