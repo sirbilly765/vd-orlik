@@ -1,5 +1,10 @@
 name: Sběr dat VD Orlík
 
+# Data z portálu Povodí Vltavy stahuje JEN tento repozitář, jednou za půl hodiny.
+# Instalace Home Assistanta si berou hotový docs/orlik.json a na pvl.cz nechodí.
+# Podmínka "if" u úlohy zajistí, že se sběr nespustí v žádném forku — jinak by
+# každá kopie repozitáře začala Povodí Vltavy zatěžovat vlastním stahováním.
+
 on:
   schedule:
     - cron: "*/30 * * * *"
@@ -14,6 +19,7 @@ concurrency:
 
 jobs:
   sber:
+    if: github.repository == 'sirbilly765/vd-orlik'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
