@@ -1,0 +1,742 @@
+# Dashboard VD Orlík — pohled pro mobil
+#
+# Vlož do svého dashboardu: tři tečky vpravo nahoře → Upravit dashboard →
+# tři tečky → Editor v nezpracovaném formátu (Raw configuration editor)
+# a obsah tohoto souboru přidej do seznamu 'views:'.
+#
+# Potřebuje z HACS: apexcharts-card, button-card, card-mod
+# Entity vytvoří integrace VD Orlík, jmenují se sensor.vd_orlik_*
+
+title: VD Orlík
+path: vd-orlik-mobil
+icon: mdi:hydro-power
+type: masonry
+visible: false
+cards:
+- type: custom:button-card
+  entity: sensor.vd_orlik_data
+  show_name: false
+  show_icon: false
+  show_state: false
+  custom_fields:
+    title: '[[[ return ''🌊 VD ORLÍK''; ]]]'
+    hladina: '[[[ const a=states[''sensor.vd_orlik_data''].attributes; const v=a.hladina; return (v==null?''—'':String(v).replace(''.'','','')) + '' <span style="font-size:.30em;opacity:.55;">m n. m.</span>''; ]]]'
+    rezerva: '[[[ const a=states[''sensor.vd_orlik_data''].attributes; const r=a.rezerva_zasobni; if(r==null) return ''—''; return (r>0?''−'':''+'') + Math.abs(r).toFixed(2).replace(''.'','','') + '' m''; ]]]'
+    sub: '[[[ const a=states[''sensor.vd_orlik_data''].attributes; const h=a.hladina, r=a.rezerva_zasobni; if(h==null||r==null) return ''''; const z=(Number(h)+Number(r)).toFixed(2).replace(''.'','',''); return (r>0?''pod'':''nad'') + '' zásobní hladinou '' + z + '' m n. m.''; ]]]'
+    objem: '[[[ const a=states[''sensor.vd_orlik_data''].attributes; const v=a.objem; return ''💧 '' + (v==null?''—'':String(v).replace(''.'','','')) + '' <span style="font-size:.6em;opacity:.65;">mil. m³ objem</span>''; ]]]'
+    chips: '[[[ const a=states[''sensor.vd_orlik_data''].attributes; function chip(v,l){ if(v==null) return ''<span class="vdchip"><span style="opacity:.55">''+l+''</span> sbírám</span>''; const f=Number(v); const t=Math.round(Math.abs(f)); let ar=''→'', c=''#7dd3fc''; if(f>0.5){ar=''↑'';c=''#2dd4bf'';} else if(f<-0.5){ar=''↓'';c=''#fb7185'';} return ''<span class="vdchip"><span style="opacity:.55">''+l+''</span> <span style="color:''+c+''">''+ar+'' ''+t+'' cm</span></span>''; } return ''<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">'' + chip(a.delta_hladina_24h,''24H'') + chip(a.delta_hladina_7d,''7D'') + chip(a.delta_hladina_30d,''30D'') + ''</div>''; ]]]'
+  styles:
+    card:
+    - background: linear-gradient(120deg, rgba(8,47,73,0.62) 0%, rgba(15,23,42,0.97) 48%, rgba(20,184,166,0.18) 100%)
+    - border-radius: 18px
+    - box-sizing: border-box
+    - border: 1px solid rgba(94,234,212,0.16)
+    - padding: 16px 20px
+    grid:
+    - display: grid
+    - grid-template-areas: '"title" "hladina" "rezerva" "sub" "objem" "chips"'
+    - row-gap: 7px
+    - justify-items: start
+    - align-content: center
+    custom_fields:
+      title:
+      - grid-area: title
+      - font-size: .85em
+      - letter-spacing: 3px
+      - font-weight: '700'
+      - opacity: '.8'
+      hladina:
+      - grid-area: hladina
+      - font-size: 44px
+      - font-weight: '800'
+      - color: '#f0feff'
+      - line-height: '1'
+      rezerva:
+      - grid-area: rezerva
+      - font-size: 26px
+      - font-weight: '800'
+      - color: '#ffb454'
+      - background: rgba(251,146,60,0.13)
+      - border: 1px solid rgba(251,146,60,0.3)
+      - border-radius: 12px
+      - padding: 3px 13px
+      sub:
+      - grid-area: sub
+      - font-size: .8em
+      - opacity: '.65'
+      objem:
+      - grid-area: objem
+      - font-size: 1.15em
+      - font-weight: '800'
+      - color: '#5eead4'
+      chips:
+      - grid-area: chips
+  card_mod:
+    style: ha-card .vdchip { background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.10); border-radius:12px; padding:5px 9px; font-size:.8em; font-weight:700; display:inline-block; white-space:nowrap; }
+- type: custom:button-card
+  entity: sensor.vd_orlik_data
+  show_name: false
+  show_icon: false
+  show_state: false
+  custom_fields:
+    k: '[[[ return ''ODTOK TEĎ''; ]]]'
+    kp: '[[[ return ''PŘÍTOK TEĎ''; ]]]'
+    del: '[[[ return '' ''; ]]]'
+    val: '[[[ const a=states[''sensor.vd_orlik_data''].attributes; const v=a.odtok, t=a.odtok_tece_ted; const on=(t===true||t===''True''||t===''true''); const c=on?''#fbbf24'':''#7dd3fc'', txt=on?''⚡ ŠPIČKUJE'':''○ STOJÍ''; const s=(v==null?''—'':String(v).replace(''.'','','')); return ''<div style="display:flex;align-items:baseline;gap:9px;flex-wrap:wrap">''+''<span style="font-size:26px;font-weight:800;color:#fb923c;line-height:1.05">''+s+''</span>''+''<span style="font-size:13px;font-weight:500;opacity:.55">m³/s</span>''+''<span style="border:1px solid ''+c+'';color:''+c+'';border-radius:9px;padding:3px 8px;font-size:11px;font-weight:700;letter-spacing:.08em;white-space:nowrap">''+txt+''</span>''+''</div>''; ]]]'
+    valp: '[[[ const a=states[''sensor.vd_orlik_data''].attributes; const v=a.pritok; const s=(v==null?''—'':String(v).replace(''.'','','')); return ''<div style="display:flex;align-items:baseline;gap:9px">''+''<span style="font-size:26px;font-weight:800;color:#38bdf8;line-height:1.05">''+s+''</span>''+''<span style="font-size:13px;font-weight:500;opacity:.55">m³/s</span></div>''; ]]]'
+    det: '[[[ const a=states[''sensor.vd_orlik_data''].attributes; const p=a.odtok_prumer_24h, h=a.odtok_hodin_24h; const pv=p==null?''—'':Number(p).toFixed(1).replace(''.'','','')+'' m³/s''; const hv=h==null?''—'':Number(h).toFixed(1).replace(''.'','','')+'' h''; return ''<div style="line-height:1.65;font-size:.85em;opacity:.6">''+''<div>průměr 24 h <b style="color:#e2e8f0;font-weight:700">''+pv+''</b></div>''+''<div>teklo <b style="color:#e2e8f0;font-weight:700">''+hv+''</b> z 24</div></div>''; ]]]'
+    detp: '[[[ const a=states[''sensor.vd_orlik_data''].attributes; const p=a.pritok_24h; const pv=p==null?''—'':(Number(p)*1e6/86400).toFixed(1).replace(''.'','','')+'' m³/s''; let cas=''—''; if(a.cas_mereni){const d=new Date(a.cas_mereni); cas=String(d.getHours()).padStart(2,''0'')+'':''+String(d.getMinutes()).padStart(2,''0'');} return ''<div style="line-height:1.65;font-size:.85em;opacity:.6">''+''<div>průměr 24 h <b style="color:#e2e8f0;font-weight:700">''+pv+''</b></div>''+''<div>měřeno <b style="color:#e2e8f0;font-weight:700">''+cas+''</b></div></div>''; ]]]'
+  styles:
+    card:
+    - background: '#111827'
+    - border-radius: 18px
+    - box-sizing: border-box
+    - border: 1px solid rgba(255,255,255,0.06)
+    - padding: 14px 16px
+    grid:
+    - display: grid
+    - grid-template-areas: '"k del kp" "val del valp" "det del detp"'
+    - grid-template-columns: 1fr 1px 1fr
+    - column-gap: 18px
+    - row-gap: 5px
+    - align-content: center
+    custom_fields:
+      k:
+      - grid-area: k
+      - font-size: .76em
+      - letter-spacing: .16em
+      - opacity: '.5'
+      - justify-self: start
+      kp:
+      - grid-area: kp
+      - font-size: .76em
+      - letter-spacing: .16em
+      - opacity: '.5'
+      - justify-self: start
+      del:
+      - grid-area: del
+      - background: rgba(255,255,255,0.07)
+      - width: 1px
+      - align-self: stretch
+      val:
+      - grid-area: val
+      - justify-self: start
+      valp:
+      - grid-area: valp
+      - justify-self: start
+      det:
+      - grid-area: det
+      - justify-self: start
+      - margin-top: 4px
+      detp:
+      - grid-area: detp
+      - justify-self: start
+      - margin-top: 4px
+- type: custom:apexcharts-card
+  header:
+    show: true
+    title: Denní změna hladiny
+    show_states: false
+  graph_span: 30d
+  apex_config:
+    chart:
+      height: 200
+      toolbar:
+        show: false
+      animations:
+        enabled: true
+        speed: 350
+    grid:
+      borderColor: rgba(255,255,255,0.05)
+      strokeDashArray: 3
+      xaxis:
+        lines:
+          show: false
+    tooltip:
+      theme: dark
+    xaxis:
+      labels:
+        format: dd.MM
+      type: datetime
+    yaxis:
+      labels:
+        style:
+          fontSize: 11px
+          colors: '#94a3b8'
+      title:
+        text: cm / den
+        style:
+          fontSize: 10px
+          color: '#64748b'
+    legend:
+      show: false
+    plotOptions:
+      bar:
+        columnWidth: 62%
+        borderRadius: 4
+        borderRadiusApplication: end
+        colors:
+          ranges:
+          - from: -100000
+            to: -0.5
+            color: '#fb7185'
+          - from: -0.499
+            to: 100000
+            color: '#2dd4bf'
+  series:
+  - entity: sensor.vd_orlik_denni_data
+    name: Změna hladiny
+    type: column
+    unit: ' cm'
+    float_precision: 0
+    data_generator: const dny=(entity.attributes.dny||[]).filter(d=>d.zmena_hladiny_cm!=null);return dny.slice().reverse().map(d=>[new Date(d.datum+'T12:00:00').getTime(), Math.round(d.zmena_hladiny_cm)]);
+  card_mod:
+    style: ha-card { background:#111827; border:1px solid rgba(255,255,255,0.06); border-radius:18px; box-sizing:border-box; overflow:hidden; }
+- type: custom:apexcharts-card
+  header:
+    show: true
+    title: Hladina — 24 hodin
+    show_states: false
+  graph_span: 24h
+  apex_config:
+    chart:
+      height: 165
+      toolbar:
+        show: false
+      animations:
+        enabled: true
+        speed: 350
+    grid:
+      borderColor: rgba(255,255,255,0.05)
+      strokeDashArray: 3
+      xaxis:
+        lines:
+          show: false
+    tooltip:
+      theme: dark
+    xaxis:
+      labels:
+        style:
+          fontSize: 11px
+          colors: '#94a3b8'
+    yaxis:
+      labels:
+        style:
+          fontSize: 11px
+          colors: '#94a3b8'
+      title:
+        text: m n. m.
+        style:
+          fontSize: 10px
+          color: '#64748b'
+    legend:
+      show: false
+    stroke:
+      curve: smooth
+      width: 2
+    fill:
+      type: solid
+      opacity: 0.12
+  series:
+  - entity: sensor.vd_orlik_hladina
+    name: Hladina
+    type: area
+    color: '#22d3ee'
+    unit: ' m n. m.'
+    stroke_width: 2
+    float_precision: 2
+    opacity: 0.12
+    show:
+      extremas: true
+  card_mod:
+    style: ha-card { background:#111827; border:1px solid rgba(255,255,255,0.06); border-radius:18px; box-sizing:border-box; overflow:hidden; }
+- type: custom:apexcharts-card
+  header:
+    show: true
+    title: Hladina — 7 dní
+    show_states: false
+  graph_span: 7d
+  apex_config:
+    chart:
+      height: 165
+      toolbar:
+        show: false
+      animations:
+        enabled: true
+        speed: 350
+    grid:
+      borderColor: rgba(255,255,255,0.05)
+      strokeDashArray: 3
+      xaxis:
+        lines:
+          show: false
+    tooltip:
+      theme: dark
+    xaxis:
+      labels:
+        style:
+          fontSize: 11px
+          colors: '#94a3b8'
+    yaxis:
+      labels:
+        style:
+          fontSize: 11px
+          colors: '#94a3b8'
+      title:
+        text: m n. m.
+        style:
+          fontSize: 10px
+          color: '#64748b'
+    legend:
+      show: false
+    stroke:
+      curve: smooth
+      width: 2
+    fill:
+      type: solid
+      opacity: 0.12
+  series:
+  - entity: sensor.vd_orlik_hladina
+    name: Hladina
+    type: area
+    color: '#22d3ee'
+    unit: ' m n. m.'
+    stroke_width: 2
+    float_precision: 2
+    opacity: 0.12
+    show:
+      extremas: true
+  card_mod:
+    style: ha-card { background:#111827; border:1px solid rgba(255,255,255,0.06); border-radius:18px; box-sizing:border-box; overflow:hidden; }
+- type: custom:apexcharts-card
+  header:
+    show: true
+    title: Hladina — 30 dní
+    show_states: false
+  graph_span: 31d
+  apex_config:
+    chart:
+      height: 165
+      toolbar:
+        show: false
+      animations:
+        enabled: true
+        speed: 350
+    grid:
+      borderColor: rgba(255,255,255,0.05)
+      strokeDashArray: 3
+      xaxis:
+        lines:
+          show: false
+    tooltip:
+      theme: dark
+    xaxis:
+      type: datetime
+      labels:
+        format: dd.MM
+        style:
+          fontSize: 11px
+          colors: '#94a3b8'
+    yaxis:
+      labels:
+        style:
+          fontSize: 11px
+          colors: '#94a3b8'
+      title:
+        text: m n. m.
+        style:
+          fontSize: 10px
+          color: '#64748b'
+      forceNiceScale: true
+      decimalsInFloat: 1
+    legend:
+      show: false
+    stroke:
+      curve: straight
+      width: 2
+    markers:
+      size: 0
+  series:
+  - entity: sensor.vd_orlik_denni_data
+    name: Denní závěr
+    type: line
+    color: '#22d3ee'
+    unit: ' m n. m.'
+    stroke_width: 2
+    float_precision: 2
+    data_generator: const dny=(entity.attributes.dny||[]).filter(d=>d.hladina_konec!=null);return dny.slice().reverse().map(d=>[new Date(d.datum+'T23:50:00').getTime(), d.hladina_konec]);
+    show:
+      extremas: true
+  card_mod:
+    style: ha-card { background:#111827; border:1px solid rgba(255,255,255,0.06); border-radius:18px; box-sizing:border-box; overflow:hidden; }
+- type: custom:button-card
+  entity: sensor.vd_orlik_data
+  show_name: false
+  show_icon: false
+  show_state: false
+  custom_fields:
+    nadpis: '[[[ return ''24 HODIN''; ]]]'
+    telo: '[[[ const a=states[''sensor.vd_orlik_data''].attributes; const f=v=> (v==null) ? null : Number(v).toFixed(1).replace(''.'','',''); function radek(l,v,c,znam){ const t = v==null ? ''<span style="opacity:.45;font-weight:500">—</span>'' : ((znam&&Number(v)>0?''+'':'''')+v); return ''<div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:4px 0">''+''<span style="opacity:.72;font-size:.9em">''+l+''</span>''+''<span style="font-size:1.25em;font-weight:800;color:''+c+''">''+t+''</span></div>''; } const o=f(a.odtok_24h), p=f(a.pritok_24h), b=f(a.bilance_24h); let bc=''#94b3c4''; if(b!=null){ const n=Number(a.bilance_24h); bc = n>0.05?''#2dd4bf'':(n<-0.05?''#fb7185'':''#94b3c4''); } let pata=''mil. m³''; if(o==null||p==null||b==null){ const s=a.historie_nejstarsi; if(s){ const dnu=Math.floor((Date.now()-new Date(s).getTime())/86400000); pata = dnu<30 ? (''mil. m³ · zatím ''+dnu+'' dní historie'') : ''mil. m³ · řada zatím není souvislá''; } else { pata=''mil.
+      m³ · sbírám data''; } } return radek(''Odteklo'',o,''#fb923c'',false)+radek(''Přiteklo'',p,''#38bdf8'',false)+radek(''Bilance'',b,bc,true)+''<div style="text-align:right;opacity:.4;font-size:.72em;margin-top:5px">''+pata+''</div>''; ]]]'
+  styles:
+    card:
+    - background: '#111827'
+    - border-radius: 18px
+    - box-sizing: border-box
+    - border: 1px solid rgba(255,255,255,0.06)
+    - padding: 12px 16px
+    grid:
+    - display: grid
+    - grid-template-areas: '"nadpis" "telo"'
+    - row-gap: 4px
+    - justify-items: stretch
+    - align-content: center
+    custom_fields:
+      nadpis:
+      - grid-area: nadpis
+      - font-size: 1em
+      - letter-spacing: .14em
+      - font-weight: '800'
+      - color: '#5eead4'
+      - justify-self: start
+      telo:
+      - grid-area: telo
+      - width: 100%
+- type: custom:button-card
+  entity: sensor.vd_orlik_data
+  show_name: false
+  show_icon: false
+  show_state: false
+  custom_fields:
+    nadpis: '[[[ return ''7 DNÍ''; ]]]'
+    telo: '[[[ const a=states[''sensor.vd_orlik_data''].attributes; const f=v=> (v==null) ? null : Number(v).toFixed(1).replace(''.'','',''); function radek(l,v,c,znam){ const t = v==null ? ''<span style="opacity:.45;font-weight:500">—</span>'' : ((znam&&Number(v)>0?''+'':'''')+v); return ''<div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:4px 0">''+''<span style="opacity:.72;font-size:.9em">''+l+''</span>''+''<span style="font-size:1.25em;font-weight:800;color:''+c+''">''+t+''</span></div>''; } const o=f(a.odtok_7d), p=f(a.pritok_7d), b=f(a.bilance_7d); let bc=''#94b3c4''; if(b!=null){ const n=Number(a.bilance_7d); bc = n>0.05?''#2dd4bf'':(n<-0.05?''#fb7185'':''#94b3c4''); } let pata=''mil. m³''; if(o==null||p==null||b==null){ const s=a.historie_nejstarsi; if(s){ const dnu=Math.floor((Date.now()-new Date(s).getTime())/86400000); pata = dnu<30 ? (''mil. m³ · zatím ''+dnu+'' dní historie'') : ''mil. m³ · řada zatím není souvislá''; } else { pata=''mil.
+      m³ · sbírám data''; } } return radek(''Odteklo'',o,''#fb923c'',false)+radek(''Přiteklo'',p,''#38bdf8'',false)+radek(''Bilance'',b,bc,true)+''<div style="text-align:right;opacity:.4;font-size:.72em;margin-top:5px">''+pata+''</div>''; ]]]'
+  styles:
+    card:
+    - background: '#111827'
+    - border-radius: 18px
+    - box-sizing: border-box
+    - border: 1px solid rgba(255,255,255,0.06)
+    - padding: 12px 16px
+    grid:
+    - display: grid
+    - grid-template-areas: '"nadpis" "telo"'
+    - row-gap: 4px
+    - justify-items: stretch
+    - align-content: center
+    custom_fields:
+      nadpis:
+      - grid-area: nadpis
+      - font-size: 1em
+      - letter-spacing: .14em
+      - font-weight: '800'
+      - color: '#a5b4fc'
+      - justify-self: start
+      telo:
+      - grid-area: telo
+      - width: 100%
+- type: custom:button-card
+  entity: sensor.vd_orlik_data
+  show_name: false
+  show_icon: false
+  show_state: false
+  custom_fields:
+    nadpis: '[[[ return ''30 DNÍ''; ]]]'
+    telo: '[[[ const a=states[''sensor.vd_orlik_data''].attributes; const f=v=> (v==null) ? null : Number(v).toFixed(1).replace(''.'','',''); function radek(l,v,c,znam){ const t = v==null ? ''<span style="opacity:.45;font-weight:500">—</span>'' : ((znam&&Number(v)>0?''+'':'''')+v); return ''<div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:4px 0">''+''<span style="opacity:.72;font-size:.9em">''+l+''</span>''+''<span style="font-size:1.25em;font-weight:800;color:''+c+''">''+t+''</span></div>''; } const o=f(a.odtok_30d), p=f(a.pritok_30d), b=f(a.bilance_30d); let bc=''#94b3c4''; if(b!=null){ const n=Number(a.bilance_30d); bc = n>0.05?''#2dd4bf'':(n<-0.05?''#fb7185'':''#94b3c4''); } let pata=''mil. m³''; if(o==null||p==null||b==null){ const s=a.historie_nejstarsi; if(s){ const dnu=Math.floor((Date.now()-new Date(s).getTime())/86400000); pata = dnu<30 ? (''mil. m³ · zatím ''+dnu+'' dní historie'') : ''mil. m³ · řada zatím není souvislá''; } else { pata=''mil.
+      m³ · sbírám data''; } } return radek(''Odteklo'',o,''#fb923c'',false)+radek(''Přiteklo'',p,''#38bdf8'',false)+radek(''Bilance'',b,bc,true)+''<div style="text-align:right;opacity:.4;font-size:.72em;margin-top:5px">''+pata+''</div>''; ]]]'
+  styles:
+    card:
+    - background: '#111827'
+    - border-radius: 18px
+    - box-sizing: border-box
+    - border: 1px solid rgba(255,255,255,0.06)
+    - padding: 12px 16px
+    grid:
+    - display: grid
+    - grid-template-areas: '"nadpis" "telo"'
+    - row-gap: 4px
+    - justify-items: stretch
+    - align-content: center
+    custom_fields:
+      nadpis:
+      - grid-area: nadpis
+      - font-size: 1em
+      - letter-spacing: .14em
+      - font-weight: '800'
+      - color: '#93c5fd'
+      - justify-self: start
+      telo:
+      - grid-area: telo
+      - width: 100%
+- type: custom:apexcharts-card
+  header:
+    show: true
+    title: Odtok — 24 hodin
+    show_states: false
+  graph_span: 24h
+  apex_config:
+    chart:
+      height: 155
+      toolbar:
+        show: false
+      animations:
+        enabled: true
+        speed: 350
+    grid:
+      borderColor: rgba(255,255,255,0.05)
+      strokeDashArray: 3
+      xaxis:
+        lines:
+          show: false
+    tooltip:
+      theme: dark
+    xaxis:
+      labels:
+        style:
+          fontSize: 11px
+          colors: '#94a3b8'
+    yaxis:
+      labels:
+        style:
+          fontSize: 11px
+          colors: '#94a3b8'
+      title:
+        text: m³/s
+        style:
+          fontSize: 10px
+          color: '#64748b'
+      min: 0
+    legend:
+      show: false
+    stroke:
+      curve: smooth
+      width: 2
+    fill:
+      type: solid
+      opacity: 0.13
+  series:
+  - entity: sensor.vd_orlik_odtok
+    name: Odtok
+    type: area
+    color: '#fb923c'
+    unit: ' m³/s'
+    stroke_width: 2
+    float_precision: 1
+  card_mod:
+    style: ha-card { background:#111827; border:1px solid rgba(255,255,255,0.06); border-radius:18px; box-sizing:border-box; overflow:hidden; }
+- type: custom:apexcharts-card
+  header:
+    show: true
+    title: Přítok — denní průměr
+    show_states: false
+  graph_span: 30d
+  apex_config:
+    chart:
+      height: 155
+      toolbar:
+        show: false
+      animations:
+        enabled: true
+        speed: 350
+    grid:
+      borderColor: rgba(255,255,255,0.05)
+      strokeDashArray: 3
+      xaxis:
+        lines:
+          show: false
+    tooltip:
+      theme: dark
+    xaxis:
+      labels:
+        format: dd.MM
+      type: datetime
+    yaxis:
+      labels:
+        style:
+          fontSize: 11px
+          colors: '#94a3b8'
+      title:
+        text: m³/s
+        style:
+          fontSize: 10px
+          color: '#64748b'
+      min: 0
+    legend:
+      show: false
+    plotOptions:
+      bar:
+        columnWidth: 62%
+        borderRadius: 3
+        borderRadiusApplication: end
+  series:
+  - entity: sensor.vd_orlik_denni_data
+    name: Přítok
+    type: column
+    color: '#38bdf8'
+    unit: ' m³/s'
+    float_precision: 1
+    data_generator: const dny=(entity.attributes.dny||[]).filter(d=>d.pritok_mil_m3!=null);return dny.slice().reverse().map(d=>[new Date(d.datum+'T12:00:00').getTime(), d.pritok_mil_m3*1e6/86400]);
+  card_mod:
+    style: ha-card { background:#111827; border:1px solid rgba(255,255,255,0.06); border-radius:18px; box-sizing:border-box; overflow:hidden; }
+- type: custom:apexcharts-card
+  header:
+    show: true
+    title: Přiteklo a odteklo za den
+    show_states: false
+  graph_span: 30d
+  apex_config:
+    chart:
+      height: 200
+      toolbar:
+        show: false
+      animations:
+        enabled: true
+        speed: 350
+    grid:
+      borderColor: rgba(255,255,255,0.05)
+      strokeDashArray: 3
+      xaxis:
+        lines:
+          show: false
+    tooltip:
+      theme: dark
+    xaxis:
+      labels:
+        format: dd.MM
+      type: datetime
+    yaxis:
+      labels:
+        style:
+          fontSize: 11px
+          colors: '#94a3b8'
+      title:
+        text: mil. m³
+        style:
+          fontSize: 10px
+          color: '#64748b'
+    legend:
+      show: true
+      position: top
+      fontSize: 12px
+      labels:
+        colors: '#cbd5e1'
+      markers:
+        width: 8
+        height: 8
+    plotOptions:
+      bar:
+        columnWidth: 68%
+        borderRadius: 3
+        borderRadiusApplication: end
+  series:
+  - entity: sensor.vd_orlik_denni_data
+    name: Přiteklo
+    type: column
+    color: '#38bdf8'
+    unit: ' mil. m³'
+    float_precision: 1
+    data_generator: const dny=(entity.attributes.dny||[]).filter(d=>d.pritok_mil_m3!=null);return dny.slice().reverse().map(d=>[new Date(d.datum+'T12:00:00').getTime(), d.pritok_mil_m3]);
+  - entity: sensor.vd_orlik_denni_data
+    name: Odteklo
+    type: column
+    color: '#fb923c'
+    unit: ' mil. m³'
+    float_precision: 1
+    data_generator: const dny=(entity.attributes.dny||[]).filter(d=>d.odtok_mil_m3!=null);return dny.slice().reverse().map(d=>[new Date(d.datum+'T12:00:00').getTime(), d.odtok_mil_m3]);
+  card_mod:
+    style: ha-card { background:#111827; border:1px solid rgba(255,255,255,0.06); border-radius:18px; box-sizing:border-box; overflow:hidden; }
+- type: custom:apexcharts-card
+  header:
+    show: true
+    title: Dokončené týdny
+    show_states: false
+  graph_span: 28d
+  apex_config:
+    chart:
+      height: 180
+      toolbar:
+        show: false
+      animations:
+        enabled: true
+        speed: 350
+    grid:
+      borderColor: rgba(255,255,255,0.05)
+      strokeDashArray: 3
+      xaxis:
+        lines:
+          show: false
+    tooltip:
+      theme: dark
+    xaxis:
+      labels:
+        format: dd.MM
+      type: datetime
+    yaxis:
+      labels:
+        style:
+          fontSize: 11px
+          colors: '#94a3b8'
+      title:
+        text: mil. m³
+        style:
+          fontSize: 10px
+          color: '#64748b'
+    legend:
+      show: true
+      position: top
+      fontSize: 12px
+      labels:
+        colors: '#cbd5e1'
+      markers:
+        width: 8
+        height: 8
+    plotOptions:
+      bar:
+        columnWidth: 45%
+        borderRadius: 3
+        borderRadiusApplication: end
+  series:
+  - entity: sensor.vd_orlik_tydenni_data
+    name: Přiteklo
+    type: column
+    color: '#38bdf8'
+    unit: ' mil. m³'
+    float_precision: 1
+    data_generator: const t=(entity.attributes.tydny||[]).filter(x=>!x.probiha&&x.pritok_mil_m3!=null);return t.slice().reverse().map(x=>[new Date(x.od+'T12:00:00').getTime(), x.pritok_mil_m3]);
+  - entity: sensor.vd_orlik_tydenni_data
+    name: Odteklo
+    type: column
+    color: '#fb923c'
+    unit: ' mil. m³'
+    float_precision: 1
+    data_generator: const t=(entity.attributes.tydny||[]).filter(x=>!x.probiha&&x.odtok_mil_m3!=null);return t.slice().reverse().map(x=>[new Date(x.od+'T12:00:00').getTime(), x.odtok_mil_m3]);
+  card_mod:
+    style: ha-card { background:#111827; border:1px solid rgba(255,255,255,0.06); border-radius:18px; box-sizing:border-box; overflow:hidden; }
+- type: custom:button-card
+  entity: binary_sensor.vd_orlik_data_aktualni
+  show_name: false
+  show_icon: false
+  show_state: false
+  custom_fields:
+    chuchle: '[[[ const v=states[''sensor.vltava_praha_chuchle_prutok'']; if(!v) return ''''; const t=(v.state===''unknown''||v.state===''unavailable''||isNaN(Number(v.state)))?''—'':Number(v.state).toFixed(1).replace(''.'','',''); return ''<div><ha-icon icon="mdi:waves" style="--mdc-icon-size:18px;color:#38bdf8;vertical-align:-4px;margin-right:6px"></ha-icon>''+''<span style="font-size:.8em;opacity:.65;font-weight:600">VLTAVA · PRAHA-CHUCHLE</span> ''+''<span style="font-size:1.15em;font-weight:800;color:#38bdf8">''+t+'' m³/s</span></div>''; ]]]'
+    orlik: '[[[ const ok = (function(){const b=states[''binary_sensor.vd_orlik_data_aktualni'']; return !!b && b.state===''on'';})(); return ''<div style="font-size:.85em;opacity:.6">''+''<span>data z Povodí Vltavy</span> ''+''<span style="display:inline-block;width:8px;height:8px;border-radius:50%;margin-left:4px;background:''+(ok?''#4ade80'':''#f87171'')+''"></span>''+''</div>''; ]]]'
+  styles:
+    card:
+    - background: linear-gradient(90deg, rgba(15,23,42,0.92) 0%, rgba(17,24,39,0.96) 100%)
+    - border-radius: 18px
+    - box-sizing: border-box
+    - border: 1px solid rgba(255,255,255,0.05)
+    - padding: 12px 18px
+    grid:
+    - display: grid
+    - grid-template-areas: '"chuchle orlik"'
+    - grid-template-columns: auto 1fr
+    - column-gap: 12px
+    - align-items: center
+    custom_fields:
+      chuchle:
+      - grid-area: chuchle
+      - justify-self: start
+      orlik:
+      - grid-area: orlik
+      - justify-self: end

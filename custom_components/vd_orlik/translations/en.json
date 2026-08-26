@@ -1,0 +1,33 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Orlík Dam",
+        "description": "Water level, inflow and outflow of the Orlík reservoir on the Vltava river, Czech Republic. Data comes from the Povodí Vltavy portal and is fetched centrally, so your installation never hits their website.\n\nThe defaults are fine — just submit.",
+        "data": {
+          "interval": "Update interval (minutes)",
+          "url": "Data source URL"
+        },
+        "data_description": {
+          "interval": "The source refreshes every 30 minutes; polling faster gains nothing.",
+          "url": "Change this only if you run your own data collection."
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "Orlík Dam is already set up.",
+      "single_instance_allowed": "Orlík Dam is already set up."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Orlík Dam settings",
+        "data": {
+          "interval": "Update interval (minutes)",
+          "url": "Data source URL"
+        }
+      }
+    }
+  }
+}

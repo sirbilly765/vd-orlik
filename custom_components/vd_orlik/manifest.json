@@ -1,0 +1,15 @@
+{
+  "domain": "vd_orlik",
+  "name": "VD Orlík",
+  "codeowners": [
+    "@sirbilly765"
+  ],
+  "config_flow": true,
+  "documentation": "https://github.com/sirbilly765/vd-orlik",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/sirbilly765/vd-orlik/issues",
+  "requirements": [],
+  "single_config_entry": true,
+  "version": "1.0.0"
+}
