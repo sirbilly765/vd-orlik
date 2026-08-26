@@ -148,6 +148,32 @@ zobrazují na jedno desetinné místo — víc by předstíralo přesnost, ktero
 Objem se z řady čte proložením přímkou přes okno ±60 minut, což kvantování průměruje.
 Proti prostému „nejbližšímu vzorku" to snížilo šum v denním přítoku o zhruba třetinu.
 
+## Co je v repozitáři
+
+| Složka | K čemu je |
+|---|---|
+| `custom_components/vd_orlik/` | **samotná integrace** — jediné, co se instaluje do Home Assistanta |
+| `dashboard/` | dva hotové dashboardy a návod k nim |
+| `docs/` | publikovaná data — `orlik.json` a archiv měření, servíruje je GitHub Pages |
+| `tools/` | sběrač dat — běží **jen v GitHub Actions v tomto repozitáři**, viz níž |
+| `tests/` | testy integrace |
+
+### Proč je `tools/` mimo integraci
+
+`tools/vd_orlik_parser.py` je ten kus, který chodí na portál Povodí Vltavy, stahuje
+měření a počítá z nich denní a týdenní statistiky. **Záměrně leží mimo
+`custom_components/`, aby ho HACS nikdy nenainstaloval do cizího Home Assistanta.**
+Spouští ho jedině plánovaná úloha v tomto repozitáři a výsledek publikuje jako
+statický JSON. Vaše instalace čte hotová data a na pvl.cz nechodí.
+
+Ve workflow je navíc podmínka `if: github.repository == 'sirbilly765/vd-orlik'`,
+takže se sběr nespustí ani v kopii (forku) tohoto repozitáře.
+
+`tools/vd_orlik_ca.pem` je běžný balík kořenových certifikátů. Server Povodí Vltavy
+posílá neúplný řetěz, takže se ověření podpisu bez něj na některých systémech
+nepovede. Nejsou to žádné klíče ani přihlašovací údaje — jen veřejné certifikáty,
+stejné, jaké má v sobě každý prohlížeč.
+
 ## Poděkování a licence
 
 Data pocházejí z veřejného portálu **Povodí Vltavy, s. p.** Děkujeme, že je zveřejňují.
