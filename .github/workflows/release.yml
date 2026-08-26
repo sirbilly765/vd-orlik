@@ -1,0 +1,49 @@
+name: Vydání
+
+# Ke každému vydání přiloží hotový ZIP integrace.
+# HACS ho pak stahuje místo automatického archivu zdrojáků — a stažení
+# příloh, na rozdíl od archivu, GitHub počítá a ukazuje přímo u vydání.
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  balicek:
+    name: Zabalit a přiložit
+    runs-on: ubuntu-latest
+    if: github.repository == 'sirbilly765/vd-orlik'
+
+    steps:
+      - name: Stáhnout repozitář
+        uses: actions/checkout@v4
+
+      - name: Zapsat číslo verze do manifestu
+        run: |
+          VERZE="${GITHUB_REF_NAME#v}"
+          python3 - "$VERZE" <<'PY'
+          import json, sys, pathlib
+          verze = sys.argv[1]
+          cesta = pathlib.Path("custom_components/vd_orlik/manifest.json")
+          data = json.loads(cesta.read_text(encoding="utf-8"))
+          data["version"] = verze
+          cesta.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+          print("manifest.json -> verze", verze)
+          PY
+
+      - name: Zabalit integraci
+        run: |
+          cd custom_components/vd_orlik
+          zip -r -q "$GITHUB_WORKSPACE/vd_orlik.zip" . \
+            -x '*.pyc' -x '__pycache__/*' -x '*/__pycache__/*'
+          cd "$GITHUB_WORKSPACE"
+          echo "Obsah balíčku:"
+          unzip -l vd_orlik.zip
+
+      - name: Přiložit k vydání
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "$GITHUB_REF_NAME" vd_orlik.zip --clobber
