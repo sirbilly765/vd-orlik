@@ -83,12 +83,12 @@ SENZORY: tuple[VdOrlikSensorDescription, ...] = (
         suggested_display_precision=1, hodnota=_cislo("objem"),
     ),
     VdOrlikSensorDescription(
-        key="pritok", name="Přítok", icon="mdi:water-arrow-right",
+        key="pritok", name="Přítok", icon="mdi:waves-arrow-right",
         native_unit_of_measurement=PRUTOK, state_class=MERENI,
         suggested_display_precision=1, hodnota=_cislo("pritok"),
     ),
     VdOrlikSensorDescription(
-        key="odtok", name="Odtok", icon="mdi:water-arrow-down",
+        key="odtok", name="Odtok", icon="mdi:waterfall",
         native_unit_of_measurement=PRUTOK, state_class=MERENI,
         suggested_display_precision=1, hodnota=_cislo("odtok"),
     ),
