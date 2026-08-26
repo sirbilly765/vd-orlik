@@ -13,10 +13,6 @@
           "url": "Měňte jen tehdy, pokud provozujete vlastní sběr dat."
         }
       }
-    },
-    "abort": {
-      "already_configured": "VD Orlík už je přidán.",
-      "single_instance_allowed": "VD Orlík už je přidán, druhá kopie nemá smysl."
     }
   },
   "options": {

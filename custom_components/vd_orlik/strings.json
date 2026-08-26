@@ -2,30 +2,26 @@
   "config": {
     "step": {
       "user": {
-        "title": "VD Orlík",
-        "description": "Hladina, přítok a odtok Orlické přehrady. Data pocházejí z portálu Povodí Vltavy, s. p. a stahují se centrálně, takže vaše instalace na jejich web nechodí.\n\nVýchozí nastavení stačí — stačí potvrdit.",
+        "title": "Orlík Dam",
+        "description": "Water level, inflow and outflow of the Orlík reservoir on the Vltava river, Czech Republic. Data comes from the Povodí Vltavy portal and is fetched centrally, so your installation never hits their website.\n\nThe defaults are fine — just submit.",
         "data": {
-          "interval": "Jak často stahovat data (minut)",
-          "url": "Adresa datového zdroje"
+          "interval": "Update interval (minutes)",
+          "url": "Data source URL"
         },
         "data_description": {
-          "interval": "Zdroj se obnovuje každou půlhodinu, častější stahování nic nepřinese.",
-          "url": "Měňte jen tehdy, pokud provozujete vlastní sběr dat."
+          "interval": "The source refreshes every 30 minutes; polling faster gains nothing.",
+          "url": "Change this only if you run your own data collection."
         }
       }
-    },
-    "abort": {
-      "already_configured": "VD Orlík už je přidán.",
-      "single_instance_allowed": "VD Orlík už je přidán, druhá kopie nemá smysl."
     }
   },
   "options": {
     "step": {
       "init": {
-        "title": "Nastavení VD Orlík",
+        "title": "Orlík Dam settings",
         "data": {
-          "interval": "Jak často stahovat data (minut)",
-          "url": "Adresa datového zdroje"
+          "interval": "Update interval (minutes)",
+          "url": "Data source URL"
         }
       }
     }

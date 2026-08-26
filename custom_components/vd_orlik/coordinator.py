@@ -28,8 +28,10 @@ class VdOrlikCoordinator(DataUpdateCoordinator[dict]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=DOMAIN,
             update_interval=timedelta(minutes=minut),
+            always_update=True,
         )
 
     async def _async_update_data(self) -> dict:
@@ -47,7 +49,8 @@ class VdOrlikCoordinator(DataUpdateCoordinator[dict]):
             raise UpdateFailed("odpověď nemá očekávaný tvar")
         if not data.get("ok"):
             raise UpdateFailed(f"zdroj hlásí chybu: {data.get('chyba')}")
-        if not isinstance(data.get("hladina"), (int, float)):
-            raise UpdateFailed("v datech chybí hladina")
+        hladina = data.get("hladina")
+        if isinstance(hladina, bool) or not isinstance(hladina, (int, float)):
+            raise UpdateFailed("v datech chybí použitelná hladina")
 
         return data

@@ -1,6 +1,8 @@
 {
   "name": "VD Orlík",
-  "country": ["CZ"],
-  "homeassistant": "2024.6.0",
+  "country": [
+    "CZ"
+  ],
+  "homeassistant": "2024.11.0",
   "render_readme": true
 }

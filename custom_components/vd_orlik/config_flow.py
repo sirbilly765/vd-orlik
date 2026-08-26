@@ -6,7 +6,14 @@ from typing import Any
 import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.selector import (
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 
 from .const import (
     CONF_INTERVAL,
@@ -18,7 +25,16 @@ from .const import (
     MIN_INTERVAL,
 )
 
-INTERVAL = vol.All(vol.Coerce(int), vol.Range(min=MIN_INTERVAL, max=MAX_INTERVAL))
+INTERVAL = vol.All(
+    NumberSelector(
+        NumberSelectorConfig(
+            min=MIN_INTERVAL, max=MAX_INTERVAL, step=5,
+            mode=NumberSelectorMode.BOX, unit_of_measurement="min",
+        )
+    ),
+    vol.Coerce(int),
+)
+ADRESA = TextSelector(TextSelectorConfig(type=TextSelectorType.URL))
 
 
 class VdOrlikConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -29,9 +45,6 @@ class VdOrlikConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        await self.async_set_unique_id(DOMAIN)
-        self._abort_if_unique_id_configured()
-
         if user_input is not None:
             return self.async_create_entry(title="VD Orlík", data=user_input)
 
@@ -40,7 +53,7 @@ class VdOrlikConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Optional(CONF_INTERVAL, default=DEFAULT_INTERVAL): INTERVAL,
-                    vol.Optional(CONF_URL, default=DEFAULT_URL): cv.string,
+                    vol.Optional(CONF_URL, default=DEFAULT_URL): ADRESA,
                 }
             ),
         )
@@ -71,7 +84,7 @@ class VdOrlikOptionsFlow(OptionsFlow):
                     ): INTERVAL,
                     vol.Optional(
                         CONF_URL, default=soucasne.get(CONF_URL, DEFAULT_URL)
-                    ): cv.string,
+                    ): ADRESA,
                 }
             ),
         )

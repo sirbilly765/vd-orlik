@@ -102,7 +102,38 @@ a obsah souboru přidejte do seznamu `views:`.
 | `sensor.vd_orlik_odtok_hodin_24h` | h | kolik hodin z 24 se pouštělo |
 | `sensor.vd_orlik_denni_data` | dní | počet dnů; rozpad je v atributu `dny` |
 | `sensor.vd_orlik_tydenni_data` | týdnů | počet týdnů; rozpad je v atributu `tydny` |
+| `sensor.vd_orlik_data` | — | souhrn: `ok` / `chyba`, celá odpověď v atributech |
 | `binary_sensor.vd_orlik_data_aktualni` | — | zapnuto, dokud jsou data čerstvá |
+| `binary_sensor.vd_orlik_odtok_tece` | — | zapnuto, když se právě pouští |
+
+### Na co se hodí `binary_sensor.vd_orlik_odtok_tece`
+
+Orlík jede špičkově. Tahle entita se zapne ve chvíli, kdy se začne pouštět,
+takže se na ni dá pověsit automatizace:
+
+```yaml
+automation:
+  - alias: "Orlík začal pouštět"
+    triggers:
+      - trigger: state
+        entity_id: binary_sensor.vd_orlik_odtok_tece
+        from: "off"
+        to: "on"
+    actions:
+      - action: notify.mobile_app
+        data:
+          message: >-
+            Orlík pouští {{ states('sensor.vd_orlik_odtok') }} m³/s.
+```
+
+## Známá omezení
+
+Dashboard se instaluje ručně a potřebuje čtyři karty z HACS — to je zatím
+nejpracnější část. Kdo si vystačí s vlastními kartami, entity fungují samy
+o sobě a nic dalšího instalovat nemusí.
+
+Integrace se přidává přes „Vlastní repozitáře" v HACS, protože zatím není
+v jeho výchozím seznamu.
 
 ## Jak přesná ta čísla jsou
 
