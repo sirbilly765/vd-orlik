@@ -13,14 +13,18 @@ on:
 permissions:
   contents: write
 
+# Kdyby se běh někde zasekl (výpadek GitHubu, zablokovaná fronta), další
+# naplánovaný běh ho zruší a proběhne sám. Sběr je idempotentní — novější
+# stažení je vždycky lepší než zaseknuté starší.
 concurrency:
   group: sber-dat
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   sber:
     if: github.repository == 'sirbilly765/vd-orlik'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
