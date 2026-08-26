@@ -174,6 +174,11 @@ posílá neúplný řetěz, takže se ověření podpisu bez něj na některých
 nepovede. Nejsou to žádné klíče ani přihlašovací údaje — jen veřejné certifikáty,
 stejné, jaké má v sobě každý prohlížeč.
 
+## Kdo to platí
+
+Provoz projektu — sběr dat i jeho publikování — podporuje **[Tvrz Holešice](https://www.tvrzholesice.cz)**,
+rekreační areál u Orlické přehrady. Díky tomu je integrace zdarma a bez reklam.
+
 ## Poděkování a licence
 
 Data pocházejí z veřejného portálu **Povodí Vltavy, s. p.** Děkujeme, že je zveřejňují.
