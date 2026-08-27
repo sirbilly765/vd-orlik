@@ -12,13 +12,15 @@ name: Sběr dat VD Orlík
 # nezveřejňuje), přestala jít dopočítat bilance a přítok za 24 h.
 #
 # Proto si běh dělá hodiny sám: jednou nastartuje a pak sbírá vždy v celou
-# a v půl, po tři hodiny. Stačí, aby GitHub spustil jedno spuštění za tři
-# hodiny, a rytmus je celou dobu půlhodinový.
+# a v půl, po pět a půl hodiny (strop jednoho běhu na GitHubu je šest hodin).
+# Stačí, aby GitHub spustil jedno spuštění za pět hodin, a rytmus je celou tu
+# dobu půlhodinový. Kratší smyčka (3 h) 27. 8. nestačila — mezi koncem jedné
+# a startem další vznikla díra 197 minut.
 #
 # Souběžné běhy nevadí. Před každým stažením se kouká, jak je orlik.json starý,
 # a když ho někdo jiný obnovil před méně než 20 minutami, tenhle tik se
 # přeskočí. Povodí Vltavy tak vidí jedno stažení za půl hodiny, ať už běží
-# jedna smyčka nebo šest.
+# jedna smyčka nebo tři.
 
 on:
   schedule:
@@ -29,18 +31,18 @@ permissions:
   contents: write
 
 env:
-  TIKU: 6                 # kolik sběrů udělá jeden běh (6 × 30 min = 3 hodiny)
+  TIKU: 11                # kolik sběrů udělá jeden běh (11 × 30 min = 5,5 hodiny)
   CERSTVE_MIN: 20         # mladší data než tolik minut znovu nestahujeme
 
 jobs:
   sber:
     if: github.repository == 'sirbilly765/vd-orlik'
     runs-on: ubuntu-latest
-    timeout-minutes: 200
+    timeout-minutes: 350   # 11 tiků po 30 min = 5,5 h; strop GitHubu je 6 h
 
     steps:
       - name: Stáhnout repozitář
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Sbírat data po půl hodině
         env:

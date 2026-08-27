@@ -19,7 +19,7 @@ jobs:
 
     steps:
       - name: Stáhnout repozitář
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Zapsat číslo verze do manifestu
         run: |
