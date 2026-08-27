@@ -4,6 +4,21 @@ name: Sběr dat VD Orlík
 # Instalace Home Assistanta si berou hotový docs/orlik.json a na pvl.cz nechodí.
 # Podmínka "if" u úlohy zajistí, že se sběr nespustí v žádném forku — jinak by
 # každá kopie repozitáře začala Povodí Vltavy zatěžovat vlastním stahováním.
+#
+# PROČ SMYČKA A NE PROSTĚ CRON:
+# Plánované spouštění na GitHubu je "podle možností" — část spuštění se zahodí
+# nebo odloží. 26.–27. 8. 2026 z toho byly mezery 2,5 až 5 hodin místo půl
+# hodiny, a protože si parser staví vlastní zásobník objemu (PVL jeho historii
+# nezveřejňuje), přestala jít dopočítat bilance a přítok za 24 h.
+#
+# Proto si běh dělá hodiny sám: jednou nastartuje a pak sbírá vždy v celou
+# a v půl, po tři hodiny. Stačí, aby GitHub spustil jedno spuštění za tři
+# hodiny, a rytmus je celou dobu půlhodinový.
+#
+# Souběžné běhy nevadí. Před každým stažením se kouká, jak je orlik.json starý,
+# a když ho někdo jiný obnovil před méně než 20 minutami, tenhle tik se
+# přeskočí. Povodí Vltavy tak vidí jedno stažení za půl hodiny, ať už běží
+# jedna smyčka nebo šest.
 
 on:
   schedule:
@@ -13,46 +28,88 @@ on:
 permissions:
   contents: write
 
-# Žádná skupina concurrency. 26.–27. 8. 2026 zůstal po výpadku GitHubu viset
-# běh ve stavu "queued", který nešlo zrušit, a plánované spouštění se místo
-# půlhodinového rytmu protáhlo na mezery přes pět hodin. Sběr je idempotentní
-# a trvá pár vteřin, takže i kdyby se dva běhy potkaly, nic se nestane —
-# fronta na sebe čekat nemusí.
+env:
+  TIKU: 6                 # kolik sběrů udělá jeden běh (6 × 30 min = 3 hodiny)
+  CERSTVE_MIN: 20         # mladší data než tolik minut znovu nestahujeme
 
 jobs:
   sber:
     if: github.repository == 'sirbilly765/vd-orlik'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v4
+    timeout-minutes: 200
 
-      - name: Stáhnout a zpracovat data z PVL
+    steps:
+      - name: Stáhnout repozitář
+        uses: actions/checkout@v4
+
+      - name: Sbírat data po půl hodině
         env:
           VD_ORLIK_HISTORY: docs/vd_orlik_history.json
           VD_ORLIK_OUT: docs/orlik.json
-        run: python3 tools/vd_orlik_parser.py
-
-      - name: Ověřit výsledek
         run: |
-          python3 - <<'PY'
+          set -u
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          for tik in $(seq 1 "$TIKU"); do
+            echo "::group::Tik $tik z $TIKU — $(date -u +%H:%M:%SZ)"
+
+            git fetch --quiet origin main && git reset --quiet --hard origin/main
+
+            if python3 - <<'PY'
+          import json, os, sys
+          from datetime import datetime, timezone
+          prah = float(os.environ["CERSTVE_MIN"]) * 60
+          try:
+              with open("docs/orlik.json", encoding="utf-8") as f:
+                  d = json.load(f)
+              stari = (datetime.now(timezone.utc)
+                       - datetime.fromisoformat(d["fetched_at"])).total_seconds()
+          except Exception:
+              sys.exit(1)                      # nečitelné -> stáhnout
+          if stari < prah:
+              print(f"data jsou stará {stari/60:.1f} min, jiný běh je právě obnovil — přeskakuji")
+              sys.exit(0)                      # čerstvé -> přeskočit
+          sys.exit(1)                          # staré -> stáhnout
+          PY
+            then
+              echo "::endgroup::"
+            else
+              python3 tools/vd_orlik_parser.py
+
+              python3 - <<'PY'
           import json, sys
           d = json.load(open("docs/orlik.json", encoding="utf-8"))
           if not d.get("ok"):
-              print("parser vrátil chybu:", d.get("chyba"))
-              sys.exit(1)
+              print("parser vrátil chybu:", d.get("chyba")); sys.exit(1)
           h = d.get("hladina")
           if not isinstance(h, (int, float)) or not (320 <= h <= 365):
-              print("nedůvěryhodná hladina:", h)
-              sys.exit(1)
+              print("nedůvěryhodná hladina:", h); sys.exit(1)
           print("OK  hladina", h, " měřeno", d.get("cas_mereni"))
           PY
 
-      - name: Uložit
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/orlik.json docs/vd_orlik_history.json
-          git diff --staged --quiet && echo "beze změny" && exit 0
-          git commit -m "data: $(python3 -c "import json;print(json.load(open('docs/orlik.json'))['cas_mereni'])")"
-          git push
+              git add docs/orlik.json docs/vd_orlik_history.json
+              if git diff --staged --quiet; then
+                echo "beze změny"
+              else
+                git commit -q -m "data: $(python3 -c "import json;print(json.load(open('docs/orlik.json'))['cas_mereni'])")"
+                for pokus in 1 2 3; do
+                  if git push --quiet; then break; fi
+                  echo "push se nepovedl (pokus $pokus), zkouším znovu po srovnání"
+                  git pull --quiet --rebase origin main || git rebase --abort || true
+                  sleep 5
+                done
+              fi
+              echo "::endgroup::"
+            fi
+
+            # poslední tik už nečeká, běh skončí
+            [ "$tik" -eq "$TIKU" ] && break
+
+            # počkat na nejbližší celou nebo půl
+            ted=$(date -u +%s)
+            dalsi=$(( (ted / 1800 + 1) * 1800 ))
+            spat=$(( dalsi - ted ))
+            echo "další sběr za $((spat / 60)) min $((spat % 60)) s"
+            sleep "$spat"
+          done
