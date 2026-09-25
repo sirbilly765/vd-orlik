@@ -319,7 +319,7 @@ def merge_hladina_odtok(existing, rady, now):
         by_t[key] = {"t": key, "h": hl, "o": od}
     hranice = ts(now) - RETENCE_DNI * 86400
     out = [v for v in by_t.values() if _safe_ts(v["t"]) >= hranice]
-    out.sort(key=lambda v: v["t"])
+    out.sort(key=lambda v: _safe_ts(v["t"]))
     return out
 
 
@@ -330,7 +330,7 @@ def merge_objem(existing, cas_mereni, objem, now):
     by_t[cas_mereni.isoformat()] = {"t": cas_mereni.isoformat(), "v": objem}
     hranice = ts(now) - RETENCE_DNI * 86400
     out = [v for v in by_t.values() if _safe_ts(v["t"]) >= hranice]
-    out.sort(key=lambda v: v["t"])
+    out.sort(key=lambda v: _safe_ts(v["t"]))
     return out
 
 
@@ -472,13 +472,16 @@ def denni_rozpad(hl_serie, ob_serie, cas_ted, max_dni=MAX_DNI_DENNI_DATA):
         den = dnes - timedelta(days=offset)
         zac = datetime(den.year, den.month, den.day, 0, 0, tzinfo=TZ)
         kon = zac + timedelta(days=1)
-        hl_okno = [v for v in hl_serie if zac.isoformat() <= v["t"] < kon.isoformat() and v.get("h") is not None]
+        zac_ts, kon_ts = ts(zac), ts(kon)
+        hl_okno = [v for v in hl_serie
+                   if v.get("h") is not None and zac_ts <= _safe_ts(v["t"]) < kon_ts]
         if len(hl_okno) < 2:
             continue
-        hl_okno.sort(key=lambda v: v["t"])
+        hl_okno.sort(key=lambda v: _safe_ts(v["t"]))
         hl_hodnoty = [v["h"] for v in hl_okno]
-        okno_odtok = [v for v in hl_serie if v.get("o") is not None and zac.isoformat() <= v["t"] < kon.isoformat()]
-        okno_odtok.sort(key=lambda v: v["t"])
+        okno_odtok = [v for v in hl_serie
+                      if v.get("o") is not None and zac_ts <= _safe_ts(v["t"]) < kon_ts]
+        okno_odtok.sort(key=lambda v: _safe_ts(v["t"]))
         odtok_den = None
         if len(okno_odtok) >= 2:
             kroky = [_safe_ts(okno_odtok[i + 1]["t"]) - _safe_ts(okno_odtok[i]["t"]) for i in range(len(okno_odtok) - 1)]
