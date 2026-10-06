@@ -156,7 +156,7 @@ Proti prostému „nejbližšímu vzorku" to snížilo šum v denním přítoku 
 | `dashboard/` | dva hotové dashboardy a návod k nim |
 | `docs/` | publikovaná data — `orlik.json` a archiv měření, servíruje je GitHub Pages |
 | `tools/` | sběrač dat — běží **jen v GitHub Actions v tomto repozitáři**, viz níž |
-| `tests/` | testy integrace |
+| `tests/` | testy — `test_parser.py` (jednotkové, offline, k pokrytí `tools/vd_orlik_parser.py`) + `test_e2e.py` a `test_vd_orlik.py` (integrace Home Assistanta) |
 
 ### Proč je `tools/` mimo integraci
 
@@ -173,6 +173,20 @@ takže se sběr nespustí ani v kopii (forku) tohoto repozitáře.
 posílá neúplný řetěz, takže se ověření podpisu bez něj na některých systémech
 nepovede. Nejsou to žádné klíče ani přihlašovací údaje — jen veřejné certifikáty,
 stejné, jaké má v sobě každý prohlížeč.
+
+### Testování
+
+Jednotkové testy parseru nepotřebují Home Assistanta ani síť:
+
+```bash
+python3 -m pytest tests/test_parser.py -q --confcutdir=tests
+```
+
+Pokrývají parsování čísel a dat, sloučení a retenci cache, hledání nejbližšího
+vzorku, interpolaci objemu, lichoběžníkovou integraci odtoku, hodiny s odtokem,
+denní a týdenní agregační rozpad i rozbor HTML tabulek — včetně DST regrese, kdy
+porovnání ISO řetězců přes časovou zónu způsobovalo špatné řazení vzorků v den
+zpětného překlopení hodin. Testy integrace (Home Assistant) běží samostatně.
 
 ## Kdo to platí
 
